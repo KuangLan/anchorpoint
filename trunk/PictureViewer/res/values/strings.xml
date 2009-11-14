@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, ViewPict!</string>
+    <string name="confirm">close</string>
+    <string name="app_name">Picture Viewer</string>
+</resources>

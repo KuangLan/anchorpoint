@@ -94,7 +94,7 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
     			Log.e("vinh","callback JPEG is called.");
     			
     			Camera.Parameters params = mCamera.getParameters();
-    			params.setPictureSize(240, 320);
+    			//params.setPictureSize(60, 80);
     	    	params.setPictureFormat(PixelFormat.JPEG);
     	    	mCamera.setParameters(params);
     	    	    	    	
@@ -131,7 +131,7 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
         
         
         Camera.Parameters params = mCamera.getParameters();        
-		params.setPictureSize(320, 240);
+		params.setPictureSize(240, 320);
     	params.setPictureFormat(PixelFormat.JPEG);
     	mCamera.setParameters(params);
     	

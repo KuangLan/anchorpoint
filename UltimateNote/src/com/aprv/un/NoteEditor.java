@@ -81,8 +81,12 @@ public class NoteEditor extends Activity{
     			Log.i("vinh","Captured.");
     			ImageView newImageView = new ImageView(this);
     			String path = UltimateNoteActivity.getImageDir() + "/" + UltimateNoteActivity.getNextPhotoName();
-    			Bitmap bitmap = BitmapFactory.decodeFile(path);
-    			newImageView.setImageBitmap(bitmap);    		
+    			Bitmap bitmap = BitmapFactory.decodeFile(path);  
+    			LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);    			
+    			newImageView.setLayoutParams(params);
+    			//newImageView.setMaxHeight(20);
+    			//newImageView.setMaxWidth(20);
+    			newImageView.setImageBitmap(bitmap); 
     			mItemsLinearLayout.addView(newImageView);
     			mNote.getNoteItemList().add(new ImageItem(path));
     			UltimateNoteActivity.incrementPhotoNum();       			

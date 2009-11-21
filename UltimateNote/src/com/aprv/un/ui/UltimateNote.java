@@ -1,4 +1,4 @@
-package com.aprv.un;
+package com.aprv.un.ui;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -8,7 +8,7 @@ import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class UltimateNoteActivity extends Activity {		
+public class UltimateNote extends Activity {		
 	private static final int ADD_NOTE = Menu.FIRST;
 	private static final int ACTIVITY_ADD_NOTE = 0;	
 	private static String workingDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/UltimateNote";

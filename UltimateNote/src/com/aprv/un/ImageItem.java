@@ -3,7 +3,8 @@ package com.aprv.un;
 public class ImageItem extends NoteItem {
 	private String path;
 	
-	public ImageItem(String path) {
+	public ImageItem(String name, String path) {
+		super(name);
 		this.path = path;
 	}
 	

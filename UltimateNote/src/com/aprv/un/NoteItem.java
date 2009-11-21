@@ -3,6 +3,9 @@ package com.aprv.un;
 public class NoteItem {
 	private String name;	//name must be unique in a note
 	
+	public NoteItem() {
+		
+	}
 	public NoteItem(String name) {
 		this.name = name;
 	}

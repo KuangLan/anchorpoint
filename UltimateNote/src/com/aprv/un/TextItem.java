@@ -3,8 +3,12 @@ package com.aprv.un;
 public class TextItem extends NoteItem {
 	private String text;
 	
-	public TextItem(String path, String text) {
-		super(path);
+	public TextItem() {
+		super();
+	}
+	
+	public TextItem(String name, String text) {
+		super(name);
 		this.text = text;
 	}
 	

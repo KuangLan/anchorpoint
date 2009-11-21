@@ -1,7 +1,8 @@
-package com.aprv.un;
+package com.aprv.un.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.aprv.un.*;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -69,7 +70,7 @@ public class NoteEditor extends Activity{
 		 newEditText.setLayoutParams(params);
 		 mEditTexts.add(newEditText);
 		 mItemsLinearLayout.addView(newEditText);
-		 mNote.getNoteItemList().add(new TextItem(""));
+		 mNote.getNoteItemList().add(new TextItem("",""));
 	}
 	
 	@Override
@@ -80,7 +81,7 @@ public class NoteEditor extends Activity{
     		case RESULT_OK:
     			Log.i("vinh","Captured.");
     			ImageView newImageView = new ImageView(this);
-    			String path = UltimateNoteActivity.getImageDir() + "/" + UltimateNoteActivity.getNextPhotoName();
+    			String path = UltimateNote.getImageDir() + "/" + UltimateNote.getNextPhotoName();
     			Bitmap bitmap = BitmapFactory.decodeFile(path);  
     			LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);    			
     			newImageView.setLayoutParams(params);
@@ -88,8 +89,8 @@ public class NoteEditor extends Activity{
     			//newImageView.setMaxWidth(20);
     			newImageView.setImageBitmap(bitmap); 
     			mItemsLinearLayout.addView(newImageView);
-    			mNote.getNoteItemList().add(new ImageItem(path));
-    			UltimateNoteActivity.incrementPhotoNum();       			
+    			mNote.getNoteItemList().add(new ImageItem("",path));
+    			UltimateNote.incrementPhotoNum();       			
     			break;
     		default:
         		Log.e("vinh","Unknown Camera result.");

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.aprv.un;
+package com.aprv.un.ui;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,20 +28,22 @@ import android.graphics.Bitmap.CompressFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+
+import com.aprv.un.Settings;
 
 // ----------------------------------------------------------------------
 
 public class CameraPreview extends Activity {    
-    private Preview mPreview;
+    private Preview mPreview;    
     private Button mButton;
+    
+    private String savedMediaLocation;
     
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +53,14 @@ public class CameraPreview extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
     
         // Create our Preview view and set it as the content of our activity.
-        mPreview = new Preview(this);
+        mPreview = new Preview(this);        
         setContentView(mPreview);
+        
+        //Pass settings from bundle
+        if (savedInstanceState!=null) {
+        	savedMediaLocation = savedInstanceState.getString(Settings.KEY_SAVED_MEDIA_LOCATION);
+        }
+        
         mButton = new Button(this);
         mButton.setText("Capture");
         mButton.setOnClickListener(new View.OnClickListener() {
@@ -64,7 +72,7 @@ public class CameraPreview extends Activity {
 				finish();
 			}
 		});
-        addContentView(mButton,new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        //addContentView(mButton,new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
     }
 
 }
@@ -93,19 +101,19 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
     			//TODO: Pass by bundle to save on memory and calculations
     			Log.e("vinh","callback JPEG is called.");
     			
-    			Camera.Parameters params = mCamera.getParameters();
+    			//Camera.Parameters params = mCamera.getParameters();
     			//params.setPictureSize(60, 80);
-    	    	params.setPictureFormat(PixelFormat.JPEG);
-    	    	mCamera.setParameters(params);
+    	    	//params.setPictureFormat(PixelFormat.JPEG);
+    	    	//mCamera.setParameters(params);
     	    	    	    	
     	    	
     	    	try {
-    	    		File dir = new File(UltimateNoteActivity.getImageDir());
+    	    		File dir = new File(UltimateNote.getImageDir());
     	    		if (!dir.exists()) {
     	    			dir.mkdirs();
     	    		}
     	    		
-    	    		String path = UltimateNoteActivity.getImageDir() + "/" + UltimateNoteActivity.getNextPhotoName();
+    	    		String path = UltimateNote.getImageDir() + "/" + UltimateNote.getNextPhotoName();
     	    		Log.i("vinh","Save photo to " + path);
 	    	    	File outputFile = new File(path);    	    	    	    	
 	    	    	if (!outputFile.exists()) {	    	    		
@@ -131,7 +139,7 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
         
         
         Camera.Parameters params = mCamera.getParameters();        
-		params.setPictureSize(240, 320);
+		//params.setPictureSize(240, 320);
     	params.setPictureFormat(PixelFormat.JPEG);
     	mCamera.setParameters(params);
     	

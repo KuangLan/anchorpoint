@@ -108,12 +108,15 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
     	    	    	    	
     	    	
     	    	try {
-    	    		File dir = new File(UltimateNote.getImageDir());
+    	    		//File dir = new File(NoteList.getImageDir());
+    	    		File dir = new File("TODO - STUB");
     	    		if (!dir.exists()) {
     	    			dir.mkdirs();
     	    		}
     	    		
-    	    		String path = UltimateNote.getImageDir() + "/" + UltimateNote.getNextPhotoName();
+    	    		//TODO: Do the right thing here!
+    	    		
+    	    		String path = "/sdcard/tmp";
     	    		Log.i("vinh","Save photo to " + path);
 	    	    	File outputFile = new File(path);    	    	    	    	
 	    	    	if (!outputFile.exists()) {	    	    		

@@ -21,8 +21,8 @@ public class NoteList extends ListActivity {
 	private static final String TAG = "UltimateNote";
 	private static final int MENU_ITEM_INSERT = Menu.FIRST;
 	private static final int MENU_ITEM_DELETE = Menu.FIRST+1;	
-	
-	/** The index of the title column */
+		
+	/** The index of the title column */	
     private static final int COLUMN_INDEX_TITLE = 1;
 	
 	@Override
@@ -161,5 +161,5 @@ public class NoteList extends ListActivity {
             // Launch activity to view/edit the currently selected item
             startActivity(new Intent(Intent.ACTION_EDIT, uri));
         }
-    }
+    }       
 }

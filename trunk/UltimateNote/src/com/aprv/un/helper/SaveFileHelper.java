@@ -1,8 +1,10 @@
 package com.aprv.un.helper;
 
-import com.aprv.un.*;
-import java.io.*;
+import java.io.File;
 import java.util.Calendar;
+import java.util.Date;
+
+import com.aprv.un.Note;
 
 public class SaveFileHelper {
 	
@@ -77,6 +79,12 @@ public class SaveFileHelper {
 		while (!unique);
 		
 		return path1;
+	}
+	
+	public static String generateDateString() {
+		Date date = Calendar.getInstance().getTime();
+		String ret = String.valueOf(date.getYear()) + String.valueOf(date.getMonth()) + String.valueOf(date.getDate());
+		return ret;
 	}
 	
 	// =============== Begin Test Area ===================//

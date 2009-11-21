@@ -1,6 +1,8 @@
 <resources>
     <string name="photo">Photo</string>
     <string name="text">Text</string>
+    <string name="capture">Capture</string>
+    <string name="cancel">Cancel</string>
     <string name="menu_new_note">Add Note</string>
     <string name="menu_delete_note">Delete</string>
     <string name="app_name">UltimateNote</string>

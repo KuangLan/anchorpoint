@@ -81,7 +81,8 @@ public class NoteEditor extends Activity{
     		case RESULT_OK:
     			Log.i("vinh","Captured.");
     			ImageView newImageView = new ImageView(this);
-    			String path = UltimateNote.getImageDir() + "/" + UltimateNote.getNextPhotoName();
+    			//String path = NoteList.getImageDir() + "/" + NoteList.getNextPhotoName();
+    			String path = "TODO - STUB";
     			Bitmap bitmap = BitmapFactory.decodeFile(path);  
     			LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);    			
     			newImageView.setLayoutParams(params);
@@ -90,7 +91,7 @@ public class NoteEditor extends Activity{
     			newImageView.setImageBitmap(bitmap); 
     			mItemsLinearLayout.addView(newImageView);
     			mNote.getNoteItemList().add(new ImageItem("",path));
-    			UltimateNote.incrementPhotoNum();       			
+    			//NoteList.incrementPhotoNum();       			
     			break;
     		default:
         		Log.e("vinh","Unknown Camera result.");

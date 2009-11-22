@@ -37,6 +37,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.aprv.un.Settings;
 import com.aprv.un.helper.SaveFileHelper;
@@ -101,9 +102,31 @@ public class CameraPreview extends Activity {
 				Log.i(Settings.TAG, "Home sweet home! Saved to " + saveFile);				
 				finish();
 			}
-		});                
+		});      
+        
+        /* TODO - Allow trackball click
+        mPreview.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				mPreview.captureImage();
+				Intent i = new Intent();
+				Bundle data = new Bundle();
+				data.putString(Settings.KEY_PATH, saveFile);
+				i.putExtras(data);
+				setResult(RESULT_OK, i);
+				
+				Log.i(Settings.TAG, "Home sweet home! Saved to " + saveFile);
+				
+				finish();
+			}
+		});        
+        mPreview.requestFocus();                       
+        */
+        Toast.makeText(this, "Touch Capture or press trackball to capture image", 10).show();        
     }
-    
+
     public static void setSaveFileName(String fileName) {
     	saveFile = fileName;    
     }
@@ -234,7 +257,7 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
     	} catch (Exception e) {
     		cleanUp();    		
     	}
-    }
+    }    
     
     public void cleanUp() {
     	mCamera.stopPreview();

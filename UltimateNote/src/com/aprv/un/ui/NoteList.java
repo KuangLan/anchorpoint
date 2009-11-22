@@ -105,6 +105,13 @@ public class NoteList extends ListActivity {
     }
 	
 	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		// TODO Auto-generated method stub
+		
+		super.onSaveInstanceState(outState);
+	}
+
+	@Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         AdapterView.AdapterContextMenuInfo info;
         try {
@@ -124,7 +131,7 @@ public class NoteList extends ListActivity {
         menu.setHeaderTitle(cursor.getString(COLUMN_INDEX_TITLE));
 
         // Add a menu item to delete the note
-        menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_delete_note);
+        menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_delete);
     }
         
     @Override

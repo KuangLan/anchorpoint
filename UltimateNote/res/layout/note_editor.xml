@@ -10,7 +10,7 @@
 	android:orientation="horizontal"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
-	android:background="@color/white">
+	android:background="@android:color/transparent">
 	  
 	  <Button android:id="@+id/textButton" 
 	  	android:text="@string/text"
@@ -26,7 +26,7 @@
 	<ScrollView
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
-		android:background="@color/white">
+		android:background="@android:color/transparent">
 		
 		<LinearLayout
 			android:layout_width="fill_parent"
@@ -38,7 +38,8 @@
 			android:scrollbarAlwaysDrawVerticalTrack="true"
 			android:fadingEdge="vertical" 
 			android:fadingEdgeLength="8px" 
-			android:background="@color/white">		
+			android:background="@color/white"
+			android:capitalize="sentences">		
 		</LinearLayout>	
 	</ScrollView>
 </LinearLayout>

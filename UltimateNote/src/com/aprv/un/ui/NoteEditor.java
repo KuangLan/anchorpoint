@@ -2,30 +2,37 @@ package com.aprv.un.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.aprv.un.*;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.aprv.un.ImageItem;
+import com.aprv.un.Note;
+import com.aprv.un.Settings;
+import com.aprv.un.TextItem;
+
 public class NoteEditor extends Activity{
+	private static final int MENU_ITEM_DELETE = Menu.FIRST;
+
 	private static int ACTIVITY_CAMERA_START = 0;
 	
 	private LinearLayout mItemsLinearLayout;
@@ -80,6 +87,8 @@ public class NoteEditor extends Activity{
 			
 	}
 	
+	
+	
 	private void populateView() {
 		
 	}
@@ -98,6 +107,7 @@ public class NoteEditor extends Activity{
 			addTextItem(curId);
 		else {
 			Toast toast = Toast.makeText(this, "A text entry already exists at requested position.", 3);
+			toast.setGravity(Gravity.TOP, 0, 0);
 			toast.show();
 		}
 	}
@@ -112,14 +122,17 @@ public class NoteEditor extends Activity{
 			idx = 0;
 		}
 		EditText newEditText = new IndexedEditText(idx, this);
-		LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 		newEditText.setLayoutParams(params);		
-		((IndexedEditText)newEditText).setNoteItem(new TextItem());		
-		insertIndexedItem(idx, (IndexedItem)newEditText);
+		newEditText.setBackgroundColor(Color.TRANSPARENT);
+		newEditText.setTextSize(20.0f);
+		
+		((IndexedEditText)newEditText).setNoteItem(new TextItem("TXT" + idx, ""));		
+		insertIndexedItem(idx, (IndexedItem)newEditText);		
 	}
 			
 	/**
-	 * 
+	 * Common method to be called when inserting note items - Set all common settings here.
 	 * @param loc position to be inserted into
 	 * @param indexedItem
 	 */
@@ -130,7 +143,12 @@ public class NoteEditor extends Activity{
 			itemList.add(loc, indexedItem);
 			mItemsLinearLayout.addView(view, loc);
 			mNote.getNoteItemList().add(loc, indexedItem.getNoteItem());
-			view.requestFocus();
+			registerForContextMenu(view);
+			view.setPadding(5, 5, 5, 5);
+			view.setFocusableInTouchMode(true);
+			View cur = (View)itemList.get(curId);
+			cur.clearFocus();
+			view.requestFocus();			
 		}
 		else {
 			Log.e(Settings.TAG, "Must add a View item");
@@ -161,7 +179,8 @@ public class NoteEditor extends Activity{
     			String path = bundle.getString(Settings.KEY_PATH);
     			addImage(curId, path);
     			
-    			Toast toast = Toast.makeText(this, "Photo saved to " + path, 5);
+    			Toast toast = Toast.makeText(this, "Photo saved to " + path, 3);
+    			toast.setGravity(Gravity.TOP, 0, 0);
     			toast.show();
     			break;
     		case RESULT_CANCELED:
@@ -175,6 +194,49 @@ public class NoteEditor extends Activity{
         }
     }
 	
+	@Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {                     
+        // TODO - Setup the menu header        
+        // Add a menu item to delete the note
+		super.onCreateContextMenu(menu, view, menuInfo);		
+        menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_remove);        
+    }
+        
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {   
+    	AdapterView.AdapterContextMenuInfo info;
+        try {
+             info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+             
+        } catch (ClassCastException e) {
+            Log.e(Settings.TAG, "bad menuInfo", e);
+            return false;
+        }
+        switch (item.getItemId()) {
+            case MENU_ITEM_DELETE: {
+            	//Log.i(Settings.TAG, "Deleting item at " + info.id);
+            	//1 TODO - Delete item data in DB
+                //2 Delete UI component
+            	/*
+            	try {            	
+            	int idx = (int)info.id;
+            	if (curId >= idx) {
+            		curId--;
+            	}
+            	curId = (curId<0)?0:curId;
+            	itemList.remove(idx);
+            	mItemsLinearLayout.removeViewAt((int)info.id);
+            	} catch (ClassCastException e) {
+            		Log.e(Settings.TAG, "Delete item - Cannot cast to indexed item.");
+            	}
+            	*/
+            	Toast.makeText(this, "Not supported yet.", 3).show();
+                return true;
+            }
+        }
+        return false;
+    }
+	
 	private void addImage(int loc, String path) {
 		Log.i(Settings.TAG, "add image " + path);
 		int idx = loc + 1;	//to insert after loc
@@ -182,11 +244,11 @@ public class NoteEditor extends Activity{
 			idx = 0;
 		}		
 		Bitmap bitmap = BitmapFactory.decodeFile(path);		
-		LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		ImageView newImageView = new IndexedImageView(idx, this);		
 		newImageView.setLayoutParams(params);				
 		newImageView.setImageBitmap(bitmap);
-		((IndexedImageView)newImageView).setNoteItem(new ImageItem(path, path));		
+		((IndexedImageView)newImageView).setNoteItem(new ImageItem("IMG"+idx, path));		
 		insertIndexedItem(idx, (IndexedItem)newImageView);
 		
 		if (bitmap == null) {
@@ -204,8 +266,16 @@ public class NoteEditor extends Activity{
 	private int insertView(int idx) {
 		for (int i=idx; i<itemList.size(); i++) {
 			IndexedItem view = itemList.get(i);
-			view.setIndex(i+1);	//push all item back 1
+			view.setIndex(i+1);	//push all item by 1
 		}
+		return idx;
+	}
+	
+	private int removeView(int idx) {
+		for (int i=idx; i<itemList.size(); i++) {
+			IndexedItem view = itemList.get(i);
+			view.setIndex(i-1);	//back 1
+		}		
 		return idx;
 	}
 	

@@ -46,6 +46,8 @@ public class NoteEditor extends Activity{
 	
 	private static int curId = 0; 
 	private List<IndexedItem> itemList;
+	
+	private View selectedView;
 		  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {		
@@ -107,7 +109,7 @@ public class NoteEditor extends Activity{
 			addTextItem(curId);
 		else {
 			Toast toast = Toast.makeText(this, "A text entry already exists at requested position.", 3);
-			toast.setGravity(Gravity.TOP, 0, 0);
+			//toast.setGravity(Gravity.TOP, 0, 0);
 			toast.show();
 		}
 	}
@@ -136,7 +138,8 @@ public class NoteEditor extends Activity{
 	 * @param loc position to be inserted into
 	 * @param indexedItem
 	 */
-	private void insertIndexedItem(int loc, IndexedItem indexedItem) {		 
+	private void insertIndexedItem(int loc, IndexedItem indexedItem) {	
+		Log.i(Settings.TAG, "Added item to " + loc);
 		if (indexedItem instanceof View) {
 			View view = (View)indexedItem;
 			insertView(loc);
@@ -180,7 +183,7 @@ public class NoteEditor extends Activity{
     			addImage(curId, path);
     			
     			Toast toast = Toast.makeText(this, "Photo saved to " + path, 3);
-    			toast.setGravity(Gravity.TOP, 0, 0);
+    			//toast.setGravity(Gravity.TOP, 0, 0);
     			toast.show();
     			break;
     		case RESULT_CANCELED:
@@ -196,10 +199,11 @@ public class NoteEditor extends Activity{
 	
 	@Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {                     
-        // TODO - Setup the menu header        
+        // TODO - Setup the menu header      
+		menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_remove);
+		selectedView = view;
         // Add a menu item to delete the note
-		super.onCreateContextMenu(menu, view, menuInfo);		
-        menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_remove);        
+		super.onCreateContextMenu(menu, view, menuInfo);		                        
     }
         
     @Override
@@ -217,20 +221,34 @@ public class NoteEditor extends Activity{
             	//Log.i(Settings.TAG, "Deleting item at " + info.id);
             	//1 TODO - Delete item data in DB
                 //2 Delete UI component
-            	/*
-            	try {            	
-            	int idx = (int)info.id;
-            	if (curId >= idx) {
-            		curId--;
+            	
+            	try {            		            		
+	            	IndexedItem view = (IndexedItem)selectedView;
+	            	int idx = view.getIndex();
+	            	Log.i(Settings.TAG, "Deleting: " + view.getIndex() + " List size: " + itemList.size());
+	            	if (curId >= view.getIndex()) {
+	            		curId--;
+	            	}
+	            	curId = (curId<0)?0:curId;
+	            	removeView(idx);
+	            	/*
+	            	if (itemList.size() <= 1) {
+	            		itemList.clear();
+	            		mNote.getNoteItemList().clear();
+	            	}
+	            	*/
+	            	//else {
+	            		itemList.remove(idx);
+	            		mNote.getNoteItemList().remove(idx);
+	            		if (curId < itemList.size())
+	            			((View)itemList.get(curId)).requestFocus();
+	            	//}	            	
+	            	mItemsLinearLayout.removeView(selectedView);	            		            		            	
+            	} catch (Exception e) {
+            		Log.e(Settings.TAG, "Cannot delete view");
             	}
-            	curId = (curId<0)?0:curId;
-            	itemList.remove(idx);
-            	mItemsLinearLayout.removeViewAt((int)info.id);
-            	} catch (ClassCastException e) {
-            		Log.e(Settings.TAG, "Delete item - Cannot cast to indexed item.");
-            	}
-            	*/
-            	Toast.makeText(this, "Not supported yet.", 3).show();
+            	
+            	//Toast.makeText(this, "Not supported yet.", 3).show();
                 return true;
             }
         }

@@ -73,7 +73,7 @@ public class SaveFileHelper {
 			} 
 			else {
 				postfix++;
-				s = (postfix<10) ? ("_0" + String.valueOf(postfix)) : String.valueOf('_' + postfix);
+				s = (postfix<10) ? ("(0" + String.valueOf(postfix) + ")") : String.valueOf("(" + postfix + ")");
 			}
 		}
 		while (!unique);
@@ -82,8 +82,8 @@ public class SaveFileHelper {
 	}
 	
 	public static String generateDateString() {
-		Date date = Calendar.getInstance().getTime();
-		String ret = String.valueOf(date.getYear()) + String.valueOf(date.getMonth()) + String.valueOf(date.getDate());
+		Calendar c = Calendar.getInstance();			
+		String ret = String.valueOf(c.get(Calendar.YEAR)) + String.valueOf(c.get(Calendar.MONTH) + 1) + String.valueOf(c.get(Calendar.DAY_OF_MONTH));		
 		return ret;
 	}
 	
@@ -93,11 +93,16 @@ public class SaveFileHelper {
 	 */
 	public static void main(String[] args) {
 		testGenerateName();
+		testGenerateDateString();
 	}
 	
 	private static void testGenerateName() {
 		String name = generateName("C:","\\","test","txt");		
 		System.out.println("Name: " + name);
+	}
+	
+	private static void testGenerateDateString() {
+		System.out.println(generateDateString());
 	}
 	
 	// ================= End Test Area ===================//

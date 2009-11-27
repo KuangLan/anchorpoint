@@ -146,7 +146,33 @@ public class UltimateNotesDAO extends AbstractDao {
 	 */
 	public Cursor fetchAllNotes() {
 		return mDb.query(NOTES_TABLE.TABLE_NAME, new String[] { NOTES_TABLE.ID.getCOLUMN_NAME(), NOTES_TABLE.TITLE.getCOLUMN_NAME(),
-				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME()}, null, null,	null, null, null);
+				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME() }, null, null,	null, null, null);
+	}
+	
+	public Notes getNotes(long rowId) throws SQLException, ParseException {
+		Cursor mCursor = mDb.query(true, NOTES_TABLE.TABLE_NAME, new String[] { NOTES_TABLE.ID.getCOLUMN_NAME(), NOTES_TABLE.TITLE.getCOLUMN_NAME(),
+				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME() }, 
+				NOTES_TABLE.ID.getCOLUMN_NAME() + "=" + rowId, null, null, null, null, null);
+
+		Notes notes = new Notes();
+
+		while (mCursor.moveToNext()) {
+			Long id = mCursor.getLong(mCursor.getColumnIndex(NOTES_TABLE.ID.getCOLUMN_NAME()));
+			String title = mCursor.getString(mCursor.getColumnIndex(NOTES_TABLE.TITLE.getCOLUMN_NAME()));
+			String source = mCursor.getString(mCursor.getColumnIndex(NOTES_TABLE.SOURCE.getCOLUMN_NAME()));
+			String created = mCursor.getString(mCursor.getColumnIndexOrThrow(NOTES_TABLE.CREATED.getCOLUMN_NAME()));
+			String modified = mCursor.getString(mCursor.getColumnIndexOrThrow(NOTES_TABLE.MODIFIED.getCOLUMN_NAME()));
+
+			notes.setId(id);
+			notes.setTitle(title);
+			notes.setSource(source);
+			if(created != null && created.trim().length() != 0)
+				notes.setCreated(dateTimeFormat.parse(created));
+			if(modified != null && modified.trim().length() != 0)
+				notes.setModified(dateTimeFormat.parse(modified));
+		}
+		mCursor.close();
+		return notes;
 	}
 	
 	/**
@@ -226,7 +252,7 @@ public class UltimateNotesDAO extends AbstractDao {
 	public Map<Long, Media> getMediaMap(List<Long> rowIds) {
 		Cursor mCursor = mDb.query(true, MEDIA_TABLE.TABLE_NAME, new String[] { MEDIA_TABLE.ID.getCOLUMN_NAME(),
 				MEDIA_TABLE.NAME.getCOLUMN_NAME(), MEDIA_TABLE.TYPE.getCOLUMN_NAME(), MEDIA_TABLE.SOURCE.getCOLUMN_NAME(),
-				MEDIA_TABLE.CAPTION.getCOLUMN_NAME() }, MEDIA_TABLE.ID.getCOLUMN_NAME() + "in " + padColumn(rowIds) , null, null, null, null, null);
+				MEDIA_TABLE.CAPTION.getCOLUMN_NAME() }, MEDIA_TABLE.ID.getCOLUMN_NAME() + "in " + padRowId(rowIds) , null, null, null, null, null);
 		Map<Long, Media> mediaMap = new HashMap<Long, Media>();
 		while (mCursor.moveToNext()) {
 
@@ -246,7 +272,7 @@ public class UltimateNotesDAO extends AbstractDao {
 		return mediaMap;
 	}
 	
-	private String padColumn(List<Long> rowIds) {
+	private String padRowId(List<Long> rowIds) {
 
 		char c = ',';
 		StringBuffer str = new StringBuffer();

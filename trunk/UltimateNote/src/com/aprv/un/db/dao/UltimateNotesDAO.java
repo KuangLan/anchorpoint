@@ -8,19 +8,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.aprv.un.db.schema.MEDIA_TABLE;
-import com.aprv.un.db.schema.NOTES_MEDIA_UNION_TABLE;
-import com.aprv.un.db.schema.NOTES_TABLE;
-import com.aprv.un.model.Media;
-import com.aprv.un.model.Notes;
-
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
+
+import com.aprv.un.Settings;
+import com.aprv.un.db.schema.MEDIA_TABLE;
+import com.aprv.un.db.schema.NOTES_MEDIA_UNION_TABLE;
+import com.aprv.un.db.schema.NOTES_TABLE;
+import com.aprv.un.model.Media;
+import com.aprv.un.model.Notes;
 
 public class UltimateNotesDAO extends AbstractDao {
 	private static final String NOTESTAG = "UltimateNotesDAO";
@@ -111,8 +111,30 @@ public class UltimateNotesDAO extends AbstractDao {
 			initialMediaValues.put(MEDIA_TABLE.TYPE.getCOLUMN_NAME(), media.getType());
 			initialMediaValues.put(MEDIA_TABLE.SOURCE.getCOLUMN_NAME(), media.getSource());
 			initialMediaValues.put(MEDIA_TABLE.CAPTION.getCOLUMN_NAME(), media.getCaption());
-			long mediaRowId = mDb.insert(MEDIA_TABLE.TABLE_NAME, null, initialNotesValues);
+			long mediaRowId = mDb.insert(MEDIA_TABLE.TABLE_NAME, null, initialMediaValues);
 			createNotesMediaUnion(rowId, mediaRowId);
+		}
+		return rowId;
+	}
+	
+	public long updateNotesContentOnly(long rowId, Notes notes, List<Media> mediaList) {
+		ContentValues initialNotesValues = new ContentValues();
+		Date stamp = new Date();
+		initialNotesValues.put(NOTES_TABLE.TITLE.getCOLUMN_NAME(), notes.getTitle());
+		initialNotesValues.put(NOTES_TABLE.CREATED.getCOLUMN_NAME(), dateTimeFormat.format(notes.getCreated()));
+		initialNotesValues.put(NOTES_TABLE.MODIFIED.getCOLUMN_NAME(), dateTimeFormat.format(stamp));
+		initialNotesValues.put(NOTES_TABLE.SOURCE.getCOLUMN_NAME(), notes.getSource());
+		mDb.update(NOTES_TABLE.TABLE_NAME, initialNotesValues, NOTES_TABLE.ID.getCOLUMN_NAME() + "=" + rowId, null);
+		for (Media media : mediaList) {
+			long mediaRowId = media.getId();
+			ContentValues initialMediaValues = new ContentValues();
+			initialMediaValues.put(MEDIA_TABLE.NAME.getCOLUMN_NAME(), media.getName());
+			initialMediaValues.put(MEDIA_TABLE.TYPE.getCOLUMN_NAME(), media.getType());
+			initialMediaValues.put(MEDIA_TABLE.SOURCE.getCOLUMN_NAME(), media.getSource());
+			initialMediaValues.put(MEDIA_TABLE.CAPTION.getCOLUMN_NAME(), media.getCaption());
+			//long mediaRowId = mDb.insert(MEDIA_TABLE.TABLE_NAME, null, initialMediaValues);
+			//createNotesMediaUnion(rowId, mediaRowId);
+			mDb.update(MEDIA_TABLE.TABLE_NAME, initialMediaValues, MEDIA_TABLE.ID.getCOLUMN_NAME() + "=" + mediaRowId, null);
 		}
 		return rowId;
 	}
@@ -146,33 +168,7 @@ public class UltimateNotesDAO extends AbstractDao {
 	 */
 	public Cursor fetchAllNotes() {
 		return mDb.query(NOTES_TABLE.TABLE_NAME, new String[] { NOTES_TABLE.ID.getCOLUMN_NAME(), NOTES_TABLE.TITLE.getCOLUMN_NAME(),
-				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME() }, null, null,	null, null, null);
-	}
-	
-	public Notes getNotes(long rowId) throws SQLException, ParseException {
-		Cursor mCursor = mDb.query(true, NOTES_TABLE.TABLE_NAME, new String[] { NOTES_TABLE.ID.getCOLUMN_NAME(), NOTES_TABLE.TITLE.getCOLUMN_NAME(),
-				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME() }, 
-				NOTES_TABLE.ID.getCOLUMN_NAME() + "=" + rowId, null, null, null, null, null);
-
-		Notes notes = new Notes();
-
-		while (mCursor.moveToNext()) {
-			Long id = mCursor.getLong(mCursor.getColumnIndex(NOTES_TABLE.ID.getCOLUMN_NAME()));
-			String title = mCursor.getString(mCursor.getColumnIndex(NOTES_TABLE.TITLE.getCOLUMN_NAME()));
-			String source = mCursor.getString(mCursor.getColumnIndex(NOTES_TABLE.SOURCE.getCOLUMN_NAME()));
-			String created = mCursor.getString(mCursor.getColumnIndexOrThrow(NOTES_TABLE.CREATED.getCOLUMN_NAME()));
-			String modified = mCursor.getString(mCursor.getColumnIndexOrThrow(NOTES_TABLE.MODIFIED.getCOLUMN_NAME()));
-
-			notes.setId(id);
-			notes.setTitle(title);
-			notes.setSource(source);
-			if(created != null && created.trim().length() != 0)
-				notes.setCreated(dateTimeFormat.parse(created));
-			if(modified != null && modified.trim().length() != 0)
-				notes.setModified(dateTimeFormat.parse(modified));
-		}
-		mCursor.close();
-		return notes;
+				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME()}, null, null,	null, null, null);
 	}
 	
 	/**
@@ -202,8 +198,73 @@ public class UltimateNotesDAO extends AbstractDao {
 		}
 		mCursor.close();
 		return notesList;
+	}		
+	
+	public Notes getNote(long rowId) {
+		String[] columns = new String[] { NOTES_TABLE.ID.getCOLUMN_NAME(), NOTES_TABLE.TITLE.getCOLUMN_NAME(),
+				NOTES_TABLE.SOURCE.getCOLUMN_NAME(), NOTES_TABLE.CREATED.getCOLUMN_NAME(), NOTES_TABLE.MODIFIED.getCOLUMN_NAME()};
+		
+		Cursor mCursor = mDb.query(NOTES_TABLE.TABLE_NAME, columns, "_id = ?", new String[]{String.valueOf(rowId)}, null, null, null);
+		if (mCursor.moveToFirst()) {
+			String title = mCursor.getString(mCursor.getColumnIndex(NOTES_TABLE.TITLE.getCOLUMN_NAME()));
+			String created = mCursor.getString(mCursor.getColumnIndexOrThrow(NOTES_TABLE.CREATED.getCOLUMN_NAME()));
+			String modified = mCursor.getString(mCursor.getColumnIndexOrThrow(NOTES_TABLE.MODIFIED.getCOLUMN_NAME()));
+			String source = mCursor.getString(mCursor.getColumnIndex(NOTES_TABLE.SOURCE.getCOLUMN_NAME()));
+			
+			Notes notes = new Notes(rowId);
+			notes.setTitle(title);
+			notes.setSource(source);
+			try {
+				if(created != null && created.trim().length() != 0)
+					notes.setCreated(dateTimeFormat.parse(created));
+				if(modified != null && modified.trim().length() != 0)
+					notes.setModified(dateTimeFormat.parse(modified));
+			} catch (ParseException e) {
+				Log.e(Settings.TAG, "Date/Time parsing error @note " + rowId);				
+			}
+			return notes;
+		}
+		mCursor.close();
+		return null;
 	}
 	
+	/**
+	 * Get all media from a note with id rowId
+	 * @param rowId
+	 * @return
+	 */
+	public List<Media> getMediaInNote(long rowId) {
+		List<Long> rowIds = getMediaEntryList(rowId);
+		List<Media> mediaList = new ArrayList<Media>();
+		if (rowIds.size() > 0) {
+			String args = MEDIA_TABLE.ID.getCOLUMN_NAME() + " in " + padColumn(rowIds);
+			//Log.i(Settings.TAG, "getMediaInNote: " + args);
+			
+			Cursor mCursor = mDb.query(true, MEDIA_TABLE.TABLE_NAME, new String[] { MEDIA_TABLE.ID.getCOLUMN_NAME(),
+					MEDIA_TABLE.NAME.getCOLUMN_NAME(), MEDIA_TABLE.TYPE.getCOLUMN_NAME(), MEDIA_TABLE.SOURCE.getCOLUMN_NAME(),
+					MEDIA_TABLE.CAPTION.getCOLUMN_NAME() }, args, null, null, null, null, null);
+			
+			while (mCursor.moveToNext()) {
+	
+				Long id = mCursor.getLong(mCursor.getColumnIndex(MEDIA_TABLE.ID.getCOLUMN_NAME()));
+				String name = mCursor.getString(mCursor.getColumnIndex(MEDIA_TABLE.NAME.getCOLUMN_NAME()));
+				String type =  mCursor.getString(mCursor.getColumnIndex(MEDIA_TABLE.TYPE.getCOLUMN_NAME()));
+				String source = mCursor.getString(mCursor.getColumnIndex(MEDIA_TABLE.SOURCE.getCOLUMN_NAME()));
+				String caption = mCursor.getString(mCursor.getColumnIndex(MEDIA_TABLE.CAPTION.getCOLUMN_NAME()));
+				Media media = new Media(id);
+				media.setName(name);
+				media.setType(type);
+				media.setSource(source);
+				media.setCaption(caption);			
+				mediaList.add(media);
+			}		
+			mCursor.close();
+			}
+		else {
+			return null;
+		}
+		return mediaList;
+	}
 
 	/**
 	 * Return a Cursor positioned at the Time Entrie that matches the given rowId
@@ -222,6 +283,14 @@ public class UltimateNotesDAO extends AbstractDao {
 		Map<Long, Media> mediaMap = getMediaMap(mediaEntryIds);
 
 		return mediaMap;
+	}
+	
+	public void updateNote(long rowId, String column, String value) {
+		ContentValues initialNotesValues = new ContentValues();
+		Date stamp = new Date();			
+		initialNotesValues.put(column, value);
+		initialNotesValues.put(NOTES_TABLE.MODIFIED.getCOLUMN_NAME(), dateTimeFormat.format(stamp));		
+		mDb.update(NOTES_TABLE.TABLE_NAME, initialNotesValues, NOTES_TABLE.ID.getCOLUMN_NAME() + "=" + rowId, null);
 	}
 
 	/**
@@ -249,10 +318,13 @@ public class UltimateNotesDAO extends AbstractDao {
 	 * 
 	 * @return
 	 */
-	public Map<Long, Media> getMediaMap(List<Long> rowIds) {
+	public Map<Long, Media> getMediaMap(List<Long> rowIds) {		
+		String args = MEDIA_TABLE.ID.getCOLUMN_NAME() + " in " + padColumn(rowIds);
+		Log.i(Settings.TAG, "getMediaMap: " + args);
+		
 		Cursor mCursor = mDb.query(true, MEDIA_TABLE.TABLE_NAME, new String[] { MEDIA_TABLE.ID.getCOLUMN_NAME(),
 				MEDIA_TABLE.NAME.getCOLUMN_NAME(), MEDIA_TABLE.TYPE.getCOLUMN_NAME(), MEDIA_TABLE.SOURCE.getCOLUMN_NAME(),
-				MEDIA_TABLE.CAPTION.getCOLUMN_NAME() }, MEDIA_TABLE.ID.getCOLUMN_NAME() + "in " + padRowId(rowIds) , null, null, null, null, null);
+				MEDIA_TABLE.CAPTION.getCOLUMN_NAME() }, args, null, null, null, null, null);
 		Map<Long, Media> mediaMap = new HashMap<Long, Media>();
 		while (mCursor.moveToNext()) {
 
@@ -272,18 +344,22 @@ public class UltimateNotesDAO extends AbstractDao {
 		return mediaMap;
 	}
 	
-	private String padRowId(List<Long> rowIds) {
+	private String padColumn(List<Long> rowIds) {
 
 		char c = ',';
 		StringBuffer str = new StringBuffer();
 		str.append('(');
 
 		for (Long rowId : rowIds) {
-			str.append(rowId);
+			str.append(String.valueOf(rowId));
 			str.append(c);
+		}		
+		
+		if (str.charAt(str.length()-1) == ',') {
+			str.setCharAt(str.length()-1, ')');
+		} else {
+			str.append(')');
 		}
-		str.setCharAt(str.length()-1, ')');
-		//str = str.replace(str.length()-1, str.length(), ")");
 		
 		return str.toString();
 	}

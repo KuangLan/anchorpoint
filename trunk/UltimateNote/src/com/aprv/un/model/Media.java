@@ -4,6 +4,9 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Media {
+	public static final String TYPE_TEXT = "text";
+	public static final String TYPE_IMAGE = "image";
+	public static final String TYPE_AUDIO = "audio";
 	
 	private long id;
 	private String name;

@@ -6,17 +6,17 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.EditText;
-import android.widget.Toast;
 
-import com.aprv.un.ImageItem;
 import com.aprv.un.NoteItem;
 import com.aprv.un.Settings;
 import com.aprv.un.TextItem;
+import com.aprv.un.model.Media;
 
 public class IndexedEditText extends EditText implements IndexedItem{
 	private int index;
-	private TextItem textItem;
+	private Media media;
 	
 	private Rect mRect;
     private Paint mPaint;
@@ -26,9 +26,16 @@ public class IndexedEditText extends EditText implements IndexedItem{
 	 * @param index This view's index in parent layout
 	 * @param context
 	 */
-	public IndexedEditText(int index, Context context) {
+	public IndexedEditText(int index, Context context, Media media) {
 		super(context);
 		this.index = index;
+		this.media = media;
+		this.setPadding(4, 2, 4, 2);
+		LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		this.setLayoutParams(params);
+		//this.setBackgroundColor(Color.TRANSPARENT);
+		
+		setText(media.getSource());
 		
 		//To draw lines
 		mRect = new Rect();
@@ -41,9 +48,8 @@ public class IndexedEditText extends EditText implements IndexedItem{
 	protected void onFocusChanged(boolean focused, int direction,
 			Rect previouslyFocusedRect) {		
 		if (focused) {
-			NoteEditor.setCurId(index);			
-			Log.i(Settings.TAG, "id = " + NoteEditor.getCurId());
-			//Toast.makeText(this.getContext(), "Focused text: " + textItem.getName() + " idx: " + index, 5).show();			
+			NoteEditor.setCurrentPos(index);	
+			Log.i(Settings.TAG, "txt " + NoteEditor.getCurrentPos());
 		} else {
 			
 		}
@@ -52,6 +58,14 @@ public class IndexedEditText extends EditText implements IndexedItem{
 	
 	
 	
+	@Override
+	protected void onTextChanged(CharSequence text, int start, int before,
+			int after) {
+		if (media!=null && text!=null)
+			media.setSource(text.toString());
+		super.onTextChanged(text, start, before, after);
+	}
+
 	@Override
 	protected void onDraw(Canvas canvas) {
 		// TODO Auto-generated method stub
@@ -76,23 +90,11 @@ public class IndexedEditText extends EditText implements IndexedItem{
 		this.index = idx;
 	}
 	
-	public void setTextItem(TextItem text) {
-		this.textItem = text;
+	public void setMedia(Media text) {
+		this.media = text;
 	}
 	
-	public TextItem getTextItem() {
-		return textItem;
-	}
-	
-	public NoteItem getNoteItem() {
-		return textItem;
-	}
-	
-	public void setNoteItem(NoteItem noteItem) {
-		try {
-			this.textItem = (TextItem) noteItem;
-		} catch (Exception e) {
-			Log.e(Settings.TAG, "Must set an ImageItem");
-		}
-	}
+	public Media getMedia() {
+		return media;
+	}		
 }

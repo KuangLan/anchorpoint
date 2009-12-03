@@ -5,6 +5,17 @@
     <string name="cancel">Cancel</string>
     <string name="menu_new_note">Add Note</string>
     <string name="menu_delete">Delete</string>
+    <string name="menu_cancel">Cancel</string>
+    <string name="menu_delete_all">Delete All</string>
+    <string name="menu_edit_title">Edit title</string>
     <string name="menu_remove">Remove</string>
     <string name="app_name">UltimateNote</string>
+    <string name="title_notes_list">Note pad</string>
+    <string name="title_edit_item">Edit Item</string>
+    <string name="title_note">Note</string>
+    <string name="title_note_editor1">NoteEditor 1</string>  
+    <string name="resolve_edit">Edit note</string>
+    <string name="button_ok">OK</string>    
+    <string name="title_edit_title">Note title:</string>
+    <string name="resolve_title">Edit title</string>        
 </resources>

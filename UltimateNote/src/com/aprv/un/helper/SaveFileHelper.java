@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 
-import com.aprv.un.Note;
+import com.aprv.un.model.Notes;
 
 public class SaveFileHelper {
 	
@@ -20,7 +20,7 @@ public class SaveFileHelper {
 	 * @param path	Absolute path to saved file
 	 * @return	Note instance if note exist, otherwise return null
 	 */
-	public static Note readSavedFile(String path) {
+	public static Notes readSavedFile(String path) {
 		//TODO	
 		return null;
 	}
@@ -30,7 +30,7 @@ public class SaveFileHelper {
 	 * @param path	Absolute path of target file
 	 * @return	Error code: 1 if successful
 	 */
-	public static int saveFile(Note note, String path) {
+	public static int saveFile(Notes note, String path) {
 		//TODO		
 		return ERROR_INVALID_FILE;
 	}

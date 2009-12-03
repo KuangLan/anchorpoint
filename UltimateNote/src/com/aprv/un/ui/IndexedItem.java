@@ -1,10 +1,10 @@
 package com.aprv.un.ui;
 
-import com.aprv.un.NoteItem;
+import com.aprv.un.model.Media;
 
 public interface IndexedItem {
 	public int getIndex();
 	public void setIndex(int index);
-	public NoteItem getNoteItem();
-	public void setNoteItem(NoteItem item);
+	public Media getMedia();
+	public void setMedia(Media item);
 }

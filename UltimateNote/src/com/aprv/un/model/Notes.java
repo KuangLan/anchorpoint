@@ -4,15 +4,19 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Notes {
-	
 	private long id;
 	private String title;
 	private Date modified;
 	private Date created;
 	private String source;
 	public Notes() {
+		title = "";
+		source = "";
+		modified = new Date();
+		created = new Date();
 	}
 	public Notes(long id) {
+		this();
 		this.id = id;
 	}
 	

@@ -22,6 +22,7 @@ import java.io.IOException;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
@@ -51,7 +52,6 @@ public class CameraPreview extends Activity {
     
     private String savedMediaLocation;
     private static String saveFile;
-    private static Bitmap bitmap;
     
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +59,8 @@ public class CameraPreview extends Activity {
         
         // Hide the window title.
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             
         //
         setContentView(R.layout.photo_capture);
@@ -211,7 +213,7 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
         
         
         Camera.Parameters params = mCamera.getParameters();        
-		params.setPictureSize(240, 320);
+		params.setPictureSize(320, 240);
     	params.setPictureFormat(PixelFormat.JPEG);
     	mCamera.setParameters(params);
     	
@@ -238,9 +240,9 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
         // Now that the size is known, set up the camera parameters and begin
         // the preview.
     	Log.i("vinh","Cam size: " + w + " - " + h);
-        Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPreviewSize(w, h);
-        mCamera.setParameters(parameters);
+        //Camera.Parameters parameters = mCamera.getParameters();
+        //parameters.setPreviewSize(w, h);
+        //mCamera.setParameters(parameters);
         mCamera.startPreview();
     }
     

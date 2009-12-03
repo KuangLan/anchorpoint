@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,76 +22,202 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.aprv.un.Constants;
 import com.aprv.un.ImageItem;
 import com.aprv.un.Note;
 import com.aprv.un.Settings;
 import com.aprv.un.TextItem;
+import com.aprv.un.db.dao.UltimateNotesDAO;
+import com.aprv.un.model.Media;
+import com.aprv.un.model.Notes;
 
 public class NoteEditor extends Activity{
 	private static final int MENU_ITEM_DELETE = Menu.FIRST;
+	private static final int MENU_CANCEL = Menu.FIRST+1;
 
 	private static int ACTIVITY_CAMERA_START = 0;
+	public static final int STATE_INSERT = 1;
+	public static final int STATE_EDIT = 2;
+	private static final String UNTITLED = "<Untitled>";			
 	
 	private LinearLayout mItemsLinearLayout;
 	private Button mTextButton;
 	private Button mPhotoButton;
-	private Note mNote;
+	private Notes mNote;
+	private List<Media> mMedia;
+	private UltimateNotesDAO mDAO;
+	private int mState;
+	private long mRowId;
 	private String mediaLocation;
+	private boolean mItemListChanged = false;
 	
-	private List<EditText> mEditTexts;
-	private List<ImageView> mImageViews;	
-	
-	private static int curId = 0; 
-	private List<IndexedItem> itemList;
-	
-	private View selectedView;
+	private static int mCurrentPos = -1; //always start at -1 
+	private List<IndexedItem> itemList;		
 		  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {		
+		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.note_editor);
 		
-		//initialize variables
-		mEditTexts = new ArrayList<EditText>();
-		mImageViews = new ArrayList<ImageView>();
-		itemList = new ArrayList<IndexedItem>();
+		mDAO = new UltimateNotesDAO(this);
+		mDAO.open();
+		Intent intent = getIntent();		
 		
-		//TODO - Get note from Bundle
-		mNote = new Note();
-		Intent i = getIntent();
-		mediaLocation = i.getStringExtra(Settings.KEY_SAVED_MEDIA_LOCATION);
-		if (mediaLocation == null) {
-			mediaLocation = Environment.getExternalStorageDirectory().getAbsolutePath() + "/UltimateNote/media";
+		//Initialize when this activity is called by an intent
+		if (intent!=null && Constants.ACTION_INSERT_NOTE.equals(intent.getAction())) {
+			initNewNote();
+		} else if (intent!=null && Constants.ACTION_EDIT_NOTE.equals(intent.getAction())) {			
+			initSavedNote(intent.getLongExtra(Constants.KEY_NOTE_ID, 0));
+		}		
+		
+		//Initialize with saved bundle
+		if (savedInstanceState != null) {
+			initSavedNote(savedInstanceState.getLong(Constants.KEY_NOTE_ID));
 		}
 		
-		mPhotoButton = (Button)findViewById(R.id.photoButton);
+		setContentView(R.layout.note_editor);
+				
 		mTextButton = (Button)findViewById(R.id.textButton);
-		mItemsLinearLayout = (LinearLayout)findViewById(R.id.itemsLinearLayout);
+		mPhotoButton = (Button)findViewById(R.id.photoButton);
+		mTextButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				boolean curPosIsText = false, nextPosIsText = false;
+				
+				if (mCurrentPos>=0 && mCurrentPos<mMedia.size())
+					curPosIsText = Media.TYPE_TEXT.equals(mMedia.get(mCurrentPos).getType());
+				if (mCurrentPos+1 < mMedia.size()) 
+					nextPosIsText = Media.TYPE_TEXT.equals(mMedia.get(mCurrentPos+1).getType());
+				
+				if (!curPosIsText && !nextPosIsText) {
+					Media m = new Media();
+					m.setType(Media.TYPE_TEXT);						
+					addMedia(m, false);
+				} else {
+					
+				}
+			}
+		});
 		
 		mPhotoButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
-				buttonPhotoClicked();	
+				buttonPhotoClicked();
 			}
 		});
 		
-		mTextButton.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				buttonTextClicked();
-			}
-		});
-			
+		loadData();	
 	}
 	
+	private void addMedia(Media m, boolean addViewOnly) {
+		addMedia(mCurrentPos+1, m, addViewOnly);
+	}
 	
-	
-	private void populateView() {
+	private void addMedia(int pos, Media m, boolean addViewOnly) {
+		//Prepare data		
+		View view = null;
+		if (Media.TYPE_TEXT.equals(m.getType())) {
+			view = new IndexedEditText(pos, this, m);				
+		} else if (Media.TYPE_IMAGE.equals(m.getType())) {
+			view = new IndexedImageView(pos, this, m);
+		}
+						
+		Log.i(Settings.TAG, "Adding media to position: " + mCurrentPos);		
 		
+		//Push items from added position 1 step
+		for (int i=pos; i<mItemsLinearLayout.getChildCount(); i++) {
+			IndexedItem v = (IndexedItem)mItemsLinearLayout.getChildAt(i);
+			v.setIndex(v.getIndex()+1);
+		}
+		
+		if (pos >= 0 && pos <= mMedia.size()) {
+			if (!addViewOnly) {
+				mMedia.add(pos, m);
+				mItemListChanged = true;
+			}
+			mItemsLinearLayout.addView(view, pos);
+		}
+		else {
+			if (!addViewOnly) {
+				mMedia.add(m);
+				mItemListChanged = true;
+			}
+			mItemsLinearLayout.addView(view);
+		}			
+		view.requestFocus();
+		registerForContextMenu(view);		
+	}		
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		saveNote();
+		super.onSaveInstanceState(outState);
+	}
+		
+	@Override
+	protected void onPause() {
+		saveNote();
+		super.onPause();
+	}
+	
+	private void loadData() {
+		mCurrentPos = -1; //Very important!
+		mItemsLinearLayout = (LinearLayout) findViewById(R.id.itemsLinearLayout);
+		mItemsLinearLayout.removeAllViews();
+		for (int i=0; i<mMedia.size(); i++) {
+			Media media = mMedia.get(i);							
+			addMedia(i, media, true);
+		}
+		//Focus on the first item
+		if (mItemsLinearLayout.getChildCount()>0)
+			mItemsLinearLayout.getChildAt(0).requestFocus();
+	}		
+	
+	private void saveNote() {		 
+		//Find text items
+		if (UNTITLED.equals(mNote.getTitle())) {
+			StringBuffer sb = new StringBuffer();
+			for (int i=0; i<mMedia.size(); i++) {
+				if (Media.TYPE_TEXT.equals(mMedia.get(i).getType())) {
+					sb.append(mMedia.get(i).getSource()).append(' ');
+				}
+			}		
+			if (sb.toString().trim().length() > 0)
+				mNote.setTitle(sb.toString());
+		}
+		if (mItemListChanged) {
+			//Update title
+			
+			mDAO.updateNotes(mRowId, mNote, mMedia);
+			mItemListChanged = false;
+		} else {
+			mDAO.updateNotesContentOnly(mRowId, mNote, mMedia);
+		}
+	}
+
+	private void initNewNote() {
+		mState = STATE_INSERT;								
+		mNote = new Notes();
+		mNote.setTitle(UNTITLED);
+		mMedia = new ArrayList<Media>();
+		mRowId = mDAO.createNotes(mNote, mMedia);	
+		mState = STATE_EDIT;								
+	}
+	
+	private void initSavedNote(long rowId) {
+		mState = STATE_EDIT;
+		mRowId = rowId;
+		mNote = mDAO.getNote(mRowId);
+		mMedia = mDAO.getMediaInNote(mRowId);		
+		if (mMedia == null)	//to fix the bug on onResume() is called the first time
+			mMedia = new ArrayList<Media>();
+		
+		Log.i(Settings.TAG, "initSvedNote: " + rowId + " " + mNote + " " + mMedia);
 	}
 	
 	private void buttonPhotoClicked() {		
@@ -101,89 +226,21 @@ public class NoteEditor extends Activity{
     	startActivityForResult(i, ACTIVITY_CAMERA_START);
 	}
 	
-	private void buttonTextClicked() {
-		int size = itemList.size();
-		boolean add1 = !(size!=0 && itemList.get(curId) instanceof EditText);
-		boolean add2 = !(curId+1 < size && itemList.get(curId+1) instanceof EditText);
-		if (add1 && add2) 
-			addTextItem(curId);
-		else {
-			Toast toast = Toast.makeText(this, "A text entry already exists at requested position.", 3);
-			//toast.setGravity(Gravity.TOP, 0, 0);
-			toast.show();
-		}
-	}
-	
-	/**
-	 * 
-	 * @param loc Insert after location loc
-	 */
-	private void addTextItem(int loc) {
-		int idx = loc + 1;	//to insert after loc
-		if (itemList.size() == 0) {
-			idx = 0;
-		}
-		EditText newEditText = new IndexedEditText(idx, this);
-		LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
-		newEditText.setLayoutParams(params);		
-		newEditText.setBackgroundColor(Color.TRANSPARENT);
-		newEditText.setTextSize(20.0f);
-		
-		((IndexedEditText)newEditText).setNoteItem(new TextItem("TXT" + idx, ""));		
-		insertIndexedItem(idx, (IndexedItem)newEditText);		
-	}
-			
-	/**
-	 * Common method to be called when inserting note items - Set all common settings here.
-	 * @param loc position to be inserted into
-	 * @param indexedItem
-	 */
-	private void insertIndexedItem(int loc, IndexedItem indexedItem) {	
-		Log.i(Settings.TAG, "Added item to " + loc);
-		if (indexedItem instanceof View) {
-			View view = (View)indexedItem;
-			insertView(loc);
-			itemList.add(loc, indexedItem);
-			mItemsLinearLayout.addView(view, loc);
-			mNote.getNoteItemList().add(loc, indexedItem.getNoteItem());
-			registerForContextMenu(view);
-			view.setPadding(5, 5, 5, 5);
-			view.setFocusableInTouchMode(true);
-			View cur = (View)itemList.get(curId);
-			cur.clearFocus();
-			view.requestFocus();			
-		}
-		else {
-			Log.e(Settings.TAG, "Must add a View item");
-		}
-	}
-	
-	
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         
         if (requestCode == ACTIVITY_CAMERA_START) {
         	switch (resultCode) {
-    		case RESULT_OK:    			    			    			    			
-    			if (intent == null) {
-    				Log.e(Settings.TAG, "onActivityResult returned intent is null");
-    				return;
-    			}    			
-    			if (intent == null) {
-    				Log.e(Settings.TAG, "Intent is null");
-    			}
-    			else {
-    				Log.e(Settings.TAG, "Good intent");
-    			}
-    			Bundle bundle = intent.getExtras();
-    			Log.e(Settings.TAG, "contain Settings.KEY_PATH = " + bundle.containsKey(Settings.KEY_PATH));
-    			
+    		case RESULT_OK:    			    			    			    			    			
+    			Bundle bundle = intent.getExtras();    			    			
     			String path = bundle.getString(Settings.KEY_PATH);
-    			addImage(curId, path);
+    			Media media = new Media();
+    			media.setSource(path);
+    			media.setType(Media.TYPE_IMAGE);
+    			addMedia(media, false);
     			
     			Toast toast = Toast.makeText(this, "Photo saved to " + path, 3);
-    			//toast.setGravity(Gravity.TOP, 0, 0);
     			toast.show();
     			break;
     		case RESULT_CANCELED:
@@ -191,7 +248,7 @@ public class NoteEditor extends Activity{
     			toast.show();
     			break;
     		default:
-        		Log.e("vinh","Unknown Camera result.");
+        		Log.e(Settings.TAG,"Unknown Camera result.");
         		break;
         	}        	
         }
@@ -199,116 +256,70 @@ public class NoteEditor extends Activity{
 	
 	@Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {                     
-        // TODO - Setup the menu header      
 		menu.add(0, MENU_ITEM_DELETE, 0, R.string.menu_remove);
-		selectedView = view;
-        // Add a menu item to delete the note
+		menu.add(0, MENU_CANCEL, 0, R.string.menu_cancel);
+		menu.setHeaderTitle(R.string.title_edit_item);
 		super.onCreateContextMenu(menu, view, menuInfo);		                        
     }
         
     @Override
-    public boolean onContextItemSelected(MenuItem item) {   
-    	AdapterView.AdapterContextMenuInfo info;
-        try {
-             info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-             
-        } catch (ClassCastException e) {
-            Log.e(Settings.TAG, "bad menuInfo", e);
-            return false;
-        }
+    public boolean onContextItemSelected(MenuItem item) {       	
         switch (item.getItemId()) {
             case MENU_ITEM_DELETE: {
-            	//Log.i(Settings.TAG, "Deleting item at " + info.id);
-            	//1 TODO - Delete item data in DB
-                //2 Delete UI component
-            	
-            	try {            		            		
-	            	IndexedItem view = (IndexedItem)selectedView;
-	            	int idx = view.getIndex();
-	            	Log.i(Settings.TAG, "Deleting: " + view.getIndex() + " List size: " + itemList.size());
-	            	if (curId >= view.getIndex()) {
-	            		curId--;
-	            	}
-	            	curId = (curId<0)?0:curId;
-	            	removeView(idx);
-	            	/*
-	            	if (itemList.size() <= 1) {
-	            		itemList.clear();
-	            		mNote.getNoteItemList().clear();
-	            	}
-	            	*/
-	            	//else {
-	            		itemList.remove(idx);
-	            		mNote.getNoteItemList().remove(idx);
-	            		if (curId < itemList.size())
-	            			((View)itemList.get(curId)).requestFocus();
-	            	//}	            	
-	            	mItemsLinearLayout.removeView(selectedView);	            		            		            	
-            	} catch (Exception e) {
-            		Log.e(Settings.TAG, "Cannot delete view");
-            	}
-            	
-            	//Toast.makeText(this, "Not supported yet.", 3).show();
+	            deleteMedia(mCurrentPos);	            		            		            	
                 return true;
+            }
+            case MENU_CANCEL: {
+            	return true;
             }
         }
         return false;
     }
-	
-	private void addImage(int loc, String path) {
-		Log.i(Settings.TAG, "add image " + path);
-		int idx = loc + 1;	//to insert after loc
-		if (itemList.size() == 0) {
-			idx = 0;
-		}		
-		Bitmap bitmap = BitmapFactory.decodeFile(path);		
-		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		ImageView newImageView = new IndexedImageView(idx, this);		
-		newImageView.setLayoutParams(params);				
-		newImageView.setImageBitmap(bitmap);
-		((IndexedImageView)newImageView).setNoteItem(new ImageItem("IMG"+idx, path));		
-		insertIndexedItem(idx, (IndexedItem)newImageView);
-		
-		if (bitmap == null) {
-			//TODO - Notify user
-			Log.e(Settings.TAG, "Cannot read " + path);
-		}
-	}
-	
-	
-	/**
-	 * 
-	 * @param idx position to insert
-	 * @return
+    
+    /**
+	 * Merge consecutive text blocks resulted in media deletion
+	 * @param position
 	 */
-	private int insertView(int idx) {
-		for (int i=idx; i<itemList.size(); i++) {
-			IndexedItem view = itemList.get(i);
-			view.setIndex(i+1);	//push all item by 1
-		}
-		return idx;
-	}
-	
-	private int removeView(int idx) {
-		for (int i=idx; i<itemList.size(); i++) {
-			IndexedItem view = itemList.get(i);
-			view.setIndex(i-1);	//back 1
+	private void deleteMedia(int position) {
+		Log.i(Settings.TAG, "Delete item at " + position);
+		//Move items
+		for (int i=position; i < mItemsLinearLayout.getChildCount(); i++) {
+    		IndexedItem v = (IndexedItem) mItemsLinearLayout.getChildAt(i);
+    		v.setIndex(v.getIndex()-1);
+    	}				       	       	
+    	    	    	
+    	if (mCurrentPos > position || mCurrentPos == mMedia.size()) {
+    		mCurrentPos--;
+    	}
+    	if (mMedia.size() == 0 || mCurrentPos < 0) 
+    		mCurrentPos = -1;
+		
+    	//Delete data and view
+    	mMedia.remove(position);
+    	mItemsLinearLayout.removeViewAt(position);
+    	
+		//Merge consecutive text blocks
+		if (position > 0 && position < mMedia.size()) {
+			Media m1 = mMedia.get(position - 1);
+			Media m2 = mMedia.get(position);
+			if (Media.TYPE_TEXT.equals(m1.getType()) && Media.TYPE_TEXT.equals(m2.getType())) {
+				Log.i(Settings.TAG, "pos=" + position + " consecutive text");
+				String mergedText = m1.getSource() + "\n" + m2.getSource();
+				m1.setSource(mergedText);
+				EditText text = (EditText)mItemsLinearLayout.getChildAt(position-1);
+				text.setText(mergedText);
+				
+				deleteMedia(position);
+			}
 		}		
-		return idx;
+		mItemListChanged = true;
 	}
 	
-	public static int getCurId() {
-		return curId;
+	public static int getCurrentPos() {
+		return mCurrentPos;
 	}
 	
-	public static void setCurId(int index) {
-		curId = index;
+	public static void setCurrentPos(int index) {
+		mCurrentPos = index;
 	}	
-	
-	/*
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {		
-		return super.onCreateOptionsMenu(menu);
-	}	
-	*/
 }

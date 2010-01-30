@@ -5,8 +5,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.text.method.TextKeyListener;
+import android.text.method.TextKeyListener.Capitalize;
 import android.util.Log;
 import android.view.ViewGroup.LayoutParams;
+import android.webkit.WebSettings.TextSize;
 import android.widget.EditText;
 
 import com.aprv.un.NoteItem;
@@ -33,6 +36,7 @@ public class IndexedEditText extends EditText implements IndexedItem{
 		this.setPadding(4, 2, 4, 2);
 		LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
 		this.setLayoutParams(params);
+		this.setKeyListener(new TextKeyListener(Capitalize.SENTENCES, false));
 		//this.setBackgroundColor(Color.TRANSPARENT);
 		
 		setText(media.getSource());

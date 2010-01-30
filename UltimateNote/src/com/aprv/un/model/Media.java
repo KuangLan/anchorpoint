@@ -7,6 +7,7 @@ public class Media {
 	public static final String TYPE_TEXT = "text";
 	public static final String TYPE_IMAGE = "image";
 	public static final String TYPE_AUDIO = "audio";
+	public static final String TYPE_PAINTING = "painting";
 	
 	private long id;
 	private String name;

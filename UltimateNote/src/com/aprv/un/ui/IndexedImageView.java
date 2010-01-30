@@ -15,11 +15,19 @@ import com.aprv.un.Settings;
 import com.aprv.un.model.Media;
 
 public class IndexedImageView extends ImageView implements IndexedItem {
-	private int index;
-	private Media media;
+	protected int index;
+	protected Media media;
 	private boolean selected;
+	private Bitmap bitmap;
 	int count = 0;
 	
+	/**
+	 * To enable inheritance for IndexedAudioItem
+	 * @param context
+	 */
+	public IndexedImageView(Context context) {	
+		super(context);
+	}
 	/**
 	 * 
 	 * @param index This view's index in parent layout
@@ -30,14 +38,18 @@ public class IndexedImageView extends ImageView implements IndexedItem {
 		this.index = index;
 		this.media = media;
 		this.setFocusable(true);
-		this.setPadding(4, 2, 4, 2);		
+		this.setPadding(4, 4, 4, 4);		
 		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		this.setLayoutParams(params);		
 		this.setFocusable(true);
 		this.setFocusableInTouchMode(true);
-		
-		Bitmap bm = BitmapFactory.decodeFile(media.getSource());
-		setImageBitmap(bm);				
+		//this.setAdjustViewBounds(true);
+		//this.setMaxHeight(320);
+		//BitmapFactory.Options options=new BitmapFactory.Options(); 
+		//options.inSampleSize = 8; 		
+		//bitmap = BitmapFactory.decodeFile(media.getSource(), options);
+		bitmap = BitmapFactory.decodeFile(media.getSource());		
+		setImageBitmap(bitmap);				
 	}	
 
 	@Override
@@ -46,7 +58,8 @@ public class IndexedImageView extends ImageView implements IndexedItem {
 		if (focused) {
 			NoteEditor.setCurrentPos(index);
 			Log.i(Settings.TAG, "img " + NoteEditor.getCurrentPos());
-			setBackgroundColor(Color.BLUE);
+			//setBackgroundColor(Color.BLUE);
+			this.setBackgroundDrawable(getResources().getDrawable(R.drawable.border));
 		}
 		else {
 			setBackgroundColor(Color.TRANSPARENT);
@@ -82,5 +95,14 @@ public class IndexedImageView extends ImageView implements IndexedItem {
 		} catch (Exception e) {
 			Log.e(Settings.TAG, "Must set an ImageItem");
 		}
+	}
+	
+	public void setBitmap(Bitmap bitmap) {
+		this.bitmap = bitmap;
+		setImageBitmap(bitmap);
+	}
+	
+	public Bitmap getBitmap() {
+		return bitmap;
 	}
 }

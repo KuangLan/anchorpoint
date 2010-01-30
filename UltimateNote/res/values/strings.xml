@@ -13,9 +13,20 @@
     <string name="title_notes_list">Note pad</string>
     <string name="title_edit_item">Edit Item</string>
     <string name="title_note">Note</string>
-    <string name="title_note_editor1">NoteEditor 1</string>  
+    <string name="title_note_editor1">NoteEditor</string>  
     <string name="resolve_edit">Edit note</string>
     <string name="button_ok">OK</string>    
     <string name="title_edit_title">Note title:</string>
-    <string name="resolve_title">Edit title</string>        
+    <string name="resolve_title">Edit title</string>
+    <string name="menu_rotateLeft">Rotate Left</string>
+    <string name="menu_rotateRight">Rotate Right</string>    
+    <string name="menu_play">Play</string>              
+    <string name="menu_new_folder">New Folder</string>
+    <string name="dirnameinput_cmd_return">Save</string>
+    <string name="dirnameinput_hint">Enter a directory-name:</string>
+    <string name="up_one_level">..</string>
+    <string name="current_dir">.</string>
+    
+    <!-- Notificatoins -->
+    <string name="notification.recording">Audio Recording in progress</string>
 </resources>

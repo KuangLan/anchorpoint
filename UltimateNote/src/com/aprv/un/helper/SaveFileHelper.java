@@ -82,8 +82,12 @@ public class SaveFileHelper {
 	}
 	
 	public static String generateDateString() {
-		Calendar c = Calendar.getInstance();			
-		String ret = String.valueOf(c.get(Calendar.YEAR)) + String.valueOf(c.get(Calendar.MONTH) + 1) + String.valueOf(c.get(Calendar.DAY_OF_MONTH));		
+		Calendar c = Calendar.getInstance();
+		int m = c.get(Calendar.MONTH)+ 1;
+		int d = c.get(Calendar.DAY_OF_MONTH);
+		String s_m = (m<10)?('0' + String.valueOf(m)):String.valueOf(m);
+		String s_d = (d<10)?('0' + String.valueOf(d)):String.valueOf(d);
+		String ret = String.valueOf(c.get(Calendar.YEAR)) + s_m + s_d;		
 		return ret;
 	}
 	

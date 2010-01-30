@@ -16,28 +16,18 @@
 
 package com.aprv.un.ui;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.PixelFormat;
-import android.graphics.Bitmap.CompressFormat;
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
-import android.widget.LinearLayout;
+import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.aprv.un.Settings;
@@ -47,8 +37,8 @@ import com.aprv.un.helper.SaveFileHelper;
 
 public class CameraPreview extends Activity {    
     private Preview mPreview;    
-    private Button mCaptureButton;
-    private Button mCancelButton;
+    private ImageButton mCaptureButton;
+    private ImageButton mCancelButton;
     
     private String savedMediaLocation;
     private static String saveFile;
@@ -56,28 +46,26 @@ public class CameraPreview extends Activity {
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
         // Hide the window title.
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             
         //
         setContentView(R.layout.photo_capture);
-        // Create our Preview view and set it as the content of our activity.
-        saveFile = setupTargetFile();
-        mPreview = new Preview(saveFile, this);                
-        
-        LinearLayout layout = (LinearLayout)findViewById(R.id.camera_linear_layout);
-        layout.addView(mPreview);
+        // Create our Preview view and set it as the content of our activity.        
+        mPreview = (Preview)findViewById(R.id.cameraPreview);        
         
         //Pass settings from bundle
         Intent intent = getIntent();
-        if (intent != null) {
-        	mPreview.setMediaLocation(intent.getStringExtra(Settings.KEY_SAVED_MEDIA_LOCATION));
+        if (intent != null) {        	
+        	String saveDir = intent.getStringExtra(Settings.KEY_SAVED_MEDIA_LOCATION);
+        	saveFile = setupTargetFile(saveDir);
+        	mPreview.setTargetFile(saveFile);
         }                        
         
-        mCaptureButton = (Button)findViewById(R.id.captureButton);
+        mCaptureButton = (ImageButton)findViewById(R.id.captureButton);
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -95,7 +83,7 @@ public class CameraPreview extends Activity {
 			}
 		});
         
-        mCancelButton = (Button)findViewById(R.id.cancelButton);
+        mCancelButton = (ImageButton)findViewById(R.id.cancelButton);
         mCancelButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -105,28 +93,8 @@ public class CameraPreview extends Activity {
 				finish();
 			}
 		});      
-        
-        /* TODO - Allow trackball click
-        mPreview.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				mPreview.captureImage();
-				Intent i = new Intent();
-				Bundle data = new Bundle();
-				data.putString(Settings.KEY_PATH, saveFile);
-				i.putExtras(data);
-				setResult(RESULT_OK, i);
-				
-				Log.i(Settings.TAG, "Home sweet home! Saved to " + saveFile);
-				
-				finish();
-			}
-		});        
-        mPreview.requestFocus();                       
-        */
-        Toast.makeText(this, "Touch Capture or press trackball to capture image", 10).show();        
+                
+        Toast.makeText(this, "Touch Capture or press trackball", 10).show();        
     }
 
     public static void setSaveFileName(String fileName) {
@@ -137,12 +105,7 @@ public class CameraPreview extends Activity {
     	return saveFile;
     }       
     
-    private String setupTargetFile() {
-    	//File dir = new File(NoteList.getImageDir());
-		if (savedMediaLocation == null) {
-			Log.e(Settings.TAG, "Camera Preview savedMediaLocation == null");
-			savedMediaLocation = Environment.getExternalStorageDirectory().getAbsolutePath() + "/UltimateNote/media";
-		}
+    private String setupTargetFile(String savedMediaLocation) {    	
 		File dir = new File(savedMediaLocation);
 		if (!dir.exists()) {
 			dir.mkdirs();
@@ -151,119 +114,24 @@ public class CameraPreview extends Activity {
 		String path = SaveFileHelper.generateName(savedMediaLocation, "/", "IMG_" + SaveFileHelper.generateDateString(), "JPG");
 		return path;
     }
+
+	@Override
+	public boolean onTrackballEvent(MotionEvent event) {
+		// TODO Auto-generated method stub
+		if (event.getAction() == MotionEvent.ACTION_UP) {
+			mPreview.captureImage();
+			Intent i = new Intent();
+			Bundle data = new Bundle();
+			data.putString(Settings.KEY_PATH, saveFile);
+			i.putExtras(data);
+			setResult(RESULT_OK, i);
+			
+			Log.i(Settings.TAG, "Home sweet home! Saved to " + saveFile);
+			
+			finish();
+		}
+		return super.onTrackballEvent(event);
+	}       		
 }
 
 // ----------------------------------------------------------------------
-
-class Preview extends SurfaceView implements SurfaceHolder.Callback {
-    SurfaceHolder mHolder;
-    Camera mCamera;   
-    PictureCallback mCallbackRaw;
-    PictureCallback mCallbackJpeg;
-    
-    String savedMediaLocation;
-    String targetFile;
-    
-    Preview(String targetFile, Context context) {
-        super(context);
-        
-        // Install a SurfaceHolder.Callback so we get notified when the
-        // underlying surface is created and destroyed.
-        mHolder = getHolder();
-        mHolder.addCallback(this);
-        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        this.targetFile = targetFile;
-    }
-    
-    public void setMediaLocation(String location) {
-    	this.savedMediaLocation = location;
-    }
-        
-    
-    public void setupCallback() {    	    	
-    	mCallbackJpeg = new PictureCallback() {
-    		public void onPictureTaken(byte[] data, Camera camera) {
-    			//TODO: Pass by bundle to save on memory and calculations
-    			Log.e(Settings.TAG,"callback JPEG is called.");
-    			    	   
-    	    	try {    	    		    	    		    	    		    	    		    	    	
-    	    		File outputFile = new File(targetFile);    	    	    	    	
-	    	    	if (!outputFile.exists()) {	    	    		
-	    	    		outputFile.createNewFile();	    	    		
-	    	    	}
-	    	    	Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-    	    		FileOutputStream outputStream = new FileOutputStream(outputFile);    	    		
-    	    		bitmap.compress(CompressFormat.JPEG, 100, outputStream);
-    	    		outputStream.flush();
-    	    		outputStream.close();
-    	    		
-    	    		Log.i(Settings.TAG,"Saved photo to " + targetFile);
-	    	    	
-    	    	} catch (IOException e) {
-    	    		Log.e("io","Exception: " + e);
-    	    	}    	    	    	    	    	    	    	  
-    		}
-    	};
-    }
-
-    public void surfaceCreated(SurfaceHolder holder) {
-        // The Surface has been created, acquire the camera and tell it where
-        // to draw.
-        mCamera = Camera.open();
-        
-        
-        Camera.Parameters params = mCamera.getParameters();        
-		params.setPictureSize(320, 240);
-    	params.setPictureFormat(PixelFormat.JPEG);
-    	mCamera.setParameters(params);
-    	
-        setupCallback();
-        try {
-           mCamera.setPreviewDisplay(holder);
-        } catch (IOException exception) {
-            mCamera.release();
-            mCamera = null;
-            // TODO: add more exception handling logic here
-        }
-    }
-
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        // Surface will be destroyed when we return, so stop the preview.
-        // Because the CameraDevice object is not a shared resource, it's very
-        // important to release it when the activity is paused.
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
-    }
-
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        // Now that the size is known, set up the camera parameters and begin
-        // the preview.
-    	Log.i("vinh","Cam size: " + w + " - " + h);
-        //Camera.Parameters parameters = mCamera.getParameters();
-        //parameters.setPreviewSize(w, h);
-        //mCamera.setParameters(parameters);
-        mCamera.startPreview();
-    }
-    
-    public void captureImage() {    	    	   	    
-    	Log.e(Settings.TAG,"Capture Image!");
-    	
-    	if (mCamera == null) {
-    		Log.e(Settings.TAG,"camera NULL");
-    	}
-    	try {
-	    	mCamera.stopPreview();
-	    	mCamera.takePicture(null, null, mCallbackJpeg);
-	    	mCamera.startPreview();
-    	} catch (Exception e) {
-    		cleanUp();    		
-    	}
-    }    
-    
-    public void cleanUp() {
-    	mCamera.stopPreview();
-    	mCamera.release();
-    	mCamera = null;
-    }
-}

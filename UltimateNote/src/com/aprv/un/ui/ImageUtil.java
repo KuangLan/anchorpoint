@@ -21,10 +21,10 @@ public class ImageUtil {
 	
 	public static Bitmap rotateImage (Bitmap src,float deg, String targetFile) throws IOException{
 		Bitmap bitmap = rotateImage (src, deg);		
-		if (targetFile.indexOf(".JPG") > 0) {
+		if (targetFile.toLowerCase().endsWith(".jpg")) {
 			saveBitmap(bitmap, CompressFormat.JPEG, targetFile);
 		}
-		else if (targetFile.indexOf(".PNG") > 0) {
+		else if (targetFile.toLowerCase().endsWith(".png")) {
 			saveBitmap(bitmap, CompressFormat.PNG, targetFile);
 		}
 		return bitmap;

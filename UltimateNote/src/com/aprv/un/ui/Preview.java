@@ -55,17 +55,13 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
     }
     
     public void setupCallback() {    	    	
+    	Log.i(Settings.TAG, "Preview.setupCallback() called.");
     	mCallbackJpeg = new PictureCallback() {
     		public void onPictureTaken(byte[] data, Camera camera) {
     			//TODO: Pass by bundle to save on memory and calculations
-    			Log.e(Settings.TAG,"callback JPEG is called.");
+    			Log.i(Settings.TAG,"callback JPEG is called.");
     			    	   
-    	    	try {
-    	    		Camera.Parameters params = mCamera.getParameters();        		    	    	        	
-    	    		params.setPictureSize(320, 240);		
-    	        	params.setPictureFormat(PixelFormat.JPEG);    	        	
-    	        	mCamera.setParameters(params);
-    	        	
+    	    	try {    	    		    	        	
 	    	    	Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);	    	    	
     	    		ImageUtil.saveBitmap(bitmap, CompressFormat.JPEG, targetFile);
     	    		
@@ -82,12 +78,15 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         // The Surface has been created, acquire the camera and tell it where
         // to draw.
         mCamera = Camera.open();
-                
-        Camera.Parameters params = mCamera.getParameters();        		    	
+        
+        setupCallback();
+        Camera.Parameters params = mCamera.getParameters();
+//        params.setPictureFormat(PixelFormat.JPEG);
+//        params.setPictureSize(320, 240);
     	params.setPreviewFormat(PixelFormat.JPEG);
     	mCamera.setParameters(params);
     	
-        setupCallback();
+        //setupCallback();
         try {
            mCamera.setPreviewDisplay(holder);
         } catch (IOException exception) {
@@ -110,21 +109,30 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         // Now that the size is known, set up the camera parameters and begin
         // the preview.
     	Log.i("vinh","Cam size: " + w + " - " + h);
-        Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPreviewSize(w, h);
-        mCamera.setParameters(parameters);
+        Camera.Parameters params = mCamera.getParameters();
+        params.setPreviewSize(w, h);
+        //params.setPictureFormat(PixelFormat.JPEG);
+        //params.setPictureSize(320, 240);
+        mCamera.setParameters(params);
         mCamera.startPreview();
     }
     
     public void captureImage() {
-    	//mCamera.stopPreview();
-    	try {
+    	Camera.Parameters params = mCamera.getParameters();            
+        params.setPictureFormat(PixelFormat.JPEG);
+        params.setPictureSize(320, 240);
+        mCamera.setParameters(params);
+        
+        
+    	try {                
+    		Log.i(Settings.TAG, "Capture!");
     		mCamera.takePicture(null, null, mCallbackJpeg);
+    		Log.i(Settings.TAG, "called takePicture()");
     	} catch (Exception e) {
-    		Log.e(Settings.TAG, "Preview.captureImage(): " + e);
+    		Log.e(Settings.TAG, "Preview.captureImage() error: " + e);
     		cleanUp();
     	}
-    	//mCamera.startPreview();
+    	mCamera.startPreview();
     	
     	/*
     	mCamera.autoFocus(new AutoFocusCallback() {
@@ -136,17 +144,16 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
 		    	if (mCamera == null) {
 		    		Log.e(Settings.TAG,"camera NULL");
 		    	}
-		    	try {		    		
-		    		camera.stopPreview();
-		        	camera.takePicture(null, null, mCallbackJpeg);
-		        	camera.startPreview();		    				    		
+		    	try {		    				    		
+		        	camera.takePicture(null, null, mCallbackJpeg);		        			    				    	
 		    	} catch (Exception e) {
 		    		Log.e(Settings.TAG, "captureImage() " + targetFile + " exception: " + e);
 		    		cleanUp();    		
 		    	}
 			}
 		});
-		*/    	    	
+    	mCamera.startPreview();
+    	*/
     }
         
     public void cleanUp() {

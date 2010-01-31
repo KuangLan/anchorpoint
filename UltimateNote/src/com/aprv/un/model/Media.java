@@ -15,6 +15,9 @@ public class Media {
 	private String source;
 	private String caption;
 	
+	private static final String[] EXTENSION_AUDIO = {".3gpp",".wav", ".mp3"};
+	private static final String[] EXTENSION_IMAGE = {".jpg",".png"};
+	
 	public Media() {
 		
 	}
@@ -52,5 +55,18 @@ public class Media {
 	public void setCaption(String caption) {
 		this.caption = caption;
 	}
-	
+	public static String getMediaType(String filename) {
+		filename = filename.toLowerCase();
+		for (int i=0; i<EXTENSION_AUDIO.length; i++) {
+			if (filename.endsWith(EXTENSION_AUDIO[i])) {
+				return TYPE_AUDIO;
+			}
+		}
+		for (int i=0; i<EXTENSION_IMAGE.length; i++) {
+			if (filename.endsWith(EXTENSION_IMAGE[i])) {
+				return TYPE_IMAGE;
+			}
+		}
+		return "";
+	}
 }

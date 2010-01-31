@@ -38,7 +38,7 @@ public class IndexedImageView extends ImageView implements IndexedItem {
 		this.index = index;
 		this.media = media;
 		this.setFocusable(true);
-		this.setPadding(4, 4, 4, 4);		
+		this.setPadding(2,2,2,2);		
 		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		this.setLayoutParams(params);		
 		this.setFocusable(true);
@@ -58,8 +58,8 @@ public class IndexedImageView extends ImageView implements IndexedItem {
 		if (focused) {
 			NoteEditor.setCurrentPos(index);
 			Log.i(Settings.TAG, "img " + NoteEditor.getCurrentPos());
-			//setBackgroundColor(Color.BLUE);
-			this.setBackgroundDrawable(getResources().getDrawable(R.drawable.border));
+			setBackgroundColor(Color.BLUE);
+			//this.setBackgroundDrawable(getResources().getDrawable(R.drawable.border));
 		}
 		else {
 			setBackgroundColor(Color.TRANSPARENT);

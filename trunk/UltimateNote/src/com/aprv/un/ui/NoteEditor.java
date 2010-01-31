@@ -12,6 +12,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -42,6 +43,7 @@ public class NoteEditor extends Activity{
 	private static final int MENU_ITEM_ROTATE_LEFT = Menu.FIRST + 1;
 	private static final int MENU_ITEM_ROTATE_RIGHT = Menu.FIRST + 2;
 	private static final int MENU_ITEM_PLAY = Menu.FIRST + 3;
+	private static final int MENU_ITEM_PAINT = Menu.FIRST + 4;
 	private static final int MENU_CANCEL = Menu.FIRST+10;
 
 	private static int ACTIVITY_CAMERA_START = 0;
@@ -73,6 +75,7 @@ public class NoteEditor extends Activity{
 	private boolean mRecordingAudio = false;
 	private String mRecordAudioPath;
 	private int mAudioCount = 0;
+	private boolean isEditingImage = false;
 	
 	private static int mCurrentPos = -1; //always start at -1 	
 		  
@@ -432,8 +435,10 @@ public class NoteEditor extends Activity{
 	}
 	
 	private void buttonPaintClicked() {
+		isEditingImage = false;
 		Intent i = new Intent(this, FingerPaint.class);		
-		i.putExtra(Settings.KEY_SAVED_MEDIA_LOCATION, imagePath);		
+		i.putExtra(Settings.KEY_SAVED_FILE_LOCATION, "");
+		i.putExtra(Settings.KEY_SAVED_MEDIA_LOCATION, imagePath);
     	startActivityForResult(i, ACTIVITY_PAINT_START);
 	}
 	
@@ -451,7 +456,7 @@ public class NoteEditor extends Activity{
     			media.setType(Media.TYPE_IMAGE);
     			addMedia(media, false);
     			
-    			Toast toast = Toast.makeText(this, "Photo saved to " + path, 3);
+    			Toast toast = Toast.makeText(this, "Image saved to " + path, 3);
     			toast.show();
     			break;
     		case RESULT_CANCELED:
@@ -464,15 +469,30 @@ public class NoteEditor extends Activity{
         	}        	
         }
         
-        if (requestCode == ACTIVITY_PAINT_START) {
+        else if (requestCode == ACTIVITY_PAINT_START) {
         	switch (resultCode) {
     		case RESULT_OK:    			    			    			    			    			
     			Bundle bundle = intent.getExtras();    			    			
-    			String path = bundle.getString(Settings.KEY_PATH);
-    			Media media = new Media();
-    			media.setSource(path);
-    			media.setType(Media.TYPE_IMAGE);
-    			addMedia(media, false);
+    			String path = bundle.getString(Settings.KEY_PATH);    
+    			Log.i(Settings.TAG, "Painted to: " + path);
+    			
+    			if (!isEditingImage) {	//This is a new image
+    				Log.i(Settings.TAG, "Adding to: " + path);
+	    			Media media = new Media();
+	    			media.setSource(path);
+	    			media.setType(Media.TYPE_IMAGE);
+	    			addMedia(media, false);
+    			} else {
+    				Log.i(Settings.TAG, "Updating to: " + path);
+    				IndexedImageView imageView = (IndexedImageView)mItemsLinearLayout.getChildAt(mCurrentPos);
+                	try {
+                		Bitmap bmp = BitmapFactory.decodeFile(path);
+                		imageView.setBitmap(bmp);
+                	} catch (Exception e) {
+                		Log.e(Settings.TAG, "Error: " + e);
+                	}
+                	isEditingImage = false;
+    			}
     			
     			Toast toast = Toast.makeText(this, "Painting saved to " + path, 3);
     			toast.show();
@@ -497,6 +517,7 @@ public class NoteEditor extends Activity{
 			}
 		}
 		else if (view instanceof IndexedImageView) {
+			menu.add(0, MENU_ITEM_PAINT, 0, R.string.menu_paint);
 			menu.add(0, MENU_ITEM_ROTATE_LEFT, 0, R.string.menu_rotateLeft);
 			menu.add(0, MENU_ITEM_ROTATE_RIGHT, 0, R.string.menu_rotateRight);
 		}
@@ -514,6 +535,20 @@ public class NoteEditor extends Activity{
                 return true;
             }
             case MENU_CANCEL: {
+            	return true;
+            }
+            case MENU_ITEM_PAINT: {
+            	Media media = mMedia.get(mCurrentPos);
+            	if (media.getType().equals(Media.TYPE_IMAGE)) 
+            	{
+            		isEditingImage = true;
+	            	Intent i = new Intent(this, FingerPaint.class);            	
+	        		i.putExtra(Settings.KEY_SAVED_FILE_LOCATION, media.getSource());
+	        		i.putExtra(Settings.KEY_SAVED_MEDIA_LOCATION, imagePath);	        		
+	        		startActivityForResult(i, ACTIVITY_PAINT_START);	        		
+            	} else {
+            		Toast.makeText(this, "Your selected item is not an image.", 3);
+            	}
             	return true;
             }
             case MENU_ITEM_ROTATE_LEFT: {
@@ -603,20 +638,10 @@ public class NoteEditor extends Activity{
 	}		
 	
 	public void addExternalMedia(String path) {
-		Media m = null;
-		path = path.toLowerCase();
-		if (path.endsWith(".jpg") || path.endsWith(".png")) {
-			m = new Media();
-			m.setType(Media.TYPE_IMAGE);
-			m.setSource(path);			
-		}
-		if (m!=null) {
-			addMedia(m, false);
-		}
-	}
-	
-	private void showNotification(int statusBarIconID, int statusBarTextID,
-			int detailedTextID, boolean showIconOnly) {
-		
+		Media m = new Media();
+		m.setSource(path);			
+		m.setCaption(path);
+		m.setType(Media.getMediaType(path));		
+		addMedia(m, false);
 	}
 }

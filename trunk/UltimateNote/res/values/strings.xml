@@ -20,6 +20,7 @@
     <string name="resolve_title">Edit title</string>
     <string name="menu_rotateLeft">Rotate Left</string>
     <string name="menu_rotateRight">Rotate Right</string>    
+    <string name="menu_paint">Paint It!</string>
     <string name="menu_play">Play</string>              
     <string name="menu_new_folder">New Folder</string>
     <string name="dirnameinput_cmd_return">Save</string>

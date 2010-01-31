@@ -8,18 +8,19 @@ import java.util.List;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import com.aprv.un.Settings;
+import com.aprv.un.model.Media;
 
 public class FileBrowserDialog2 extends Dialog {
 	
@@ -34,16 +35,25 @@ public class FileBrowserDialog2 extends Dialog {
 	private NoteEditor noteEditor;
 	private Context mContext;
 	private ListView mListView;	
+	private Button mBtnCancel;
 
 	/** Called when the activity is first created. */
 	public FileBrowserDialog2(NoteEditor noteEditor) {
 		super(noteEditor);
 		this.noteEditor = noteEditor;
 		
-		setContentView(R.layout.file_browser);
-		
+		setContentView(R.layout.file_browser);		
 		mContext = getContext();
+		mBtnCancel = (Button)findViewById(R.id.btnCancel);
 		mListView = (ListView)findViewById(R.id.dirList);
+		mBtnCancel.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				FileBrowserDialog2.this.dismiss();
+			}
+		});		
 		mListView.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView arg0, View view,
                     int position, long id) {						
@@ -153,9 +163,8 @@ public class FileBrowserDialog2 extends Dialog {
 				this.currentDirectory = aDirectory;
 				fill(aDirectory.listFiles(new FileFilter() {
 					public boolean accept(File file) {
-			        	String name = file.getName().toLowerCase();
-			        	//TODO - Make this more dynamic
-			            return file.isDirectory() || name.contains(".jpg") || name.contains(".png");		        	
+			        	String type = Media.getMediaType(file.getName());
+			        	return file.isDirectory() || type.equals(Media.TYPE_AUDIO) || type.equals(Media.TYPE_IMAGE);
 			        }
 				}));				
 			}else{

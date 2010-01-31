@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">       
+	     				    
+		<TextView
+	        android:id="@+id/fileBrowserLabel"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:text="Select a media file to insert:"
+	        android:textColor="#00FF00"
+	        android:padding="1dip"/>
+	        
+	    <TextView
+	    	android:id="@+id/curDirLabel"
+	    	android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:textColor="#00FF00"
+	        android:layout_below="@id/fileBrowserLabel"	        
+	    />    
+	    	    		   
+		<ListView 
+			android:id="@+id/dirList" 
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent" 		
+			android:layout_below="@id/curDirLabel"/>
+		
+		<Button 
+			android:id="@+id/btnCancel" 
+			android:layout_height="wrap_content" 
+			android:layout_width="wrap_content" 
+			android:text="Close" 
+			android:layout_below="@id/dirList"
+			android:layout_alignParentRight="true"/>	
+		<!-- 
+		<Button 
+			android:id="@+id/Button01" 
+			android:layout_height="wrap_content" 
+			android:layout_width="wrap_content" 
+			android:text="Close" 
+			android:layout_below="@id/dirList"
+			android:layout_alignParentRight="true"/>
+		
+		<Button 
+			android:id="@+id/Button02" 
+			android:layout_height="wrap_content" 
+			android:layout_width="wrap_content" 
+			android:text="Select" 
+			android:layout_toLeftOf="@id/Button01"
+	        android:layout_alignTop="@id/Button01"/>
+		-->		    	   		
+</RelativeLayout>

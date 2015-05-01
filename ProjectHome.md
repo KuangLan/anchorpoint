@@ -1,0 +1,2 @@
+A notepad application that take notes... notepad is a window...type notes... It can add a picture... add a calendar.
+- Have the ability to add/import/append media files (image, audio, video, document, url links) to a note writing pad.
